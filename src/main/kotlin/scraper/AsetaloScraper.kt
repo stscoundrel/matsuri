@@ -1,5 +1,6 @@
 package io.github.stscoundrel.matsuri.scraper
 
+import com.microsoft.playwright.Browser
 import com.microsoft.playwright.Playwright
 import io.github.stscoundrel.matsuri.domain.Product
 import io.github.stscoundrel.matsuri.domain.ProductFetcher
@@ -11,6 +12,12 @@ class AsetaloScraper(
     companion object {
         private const val BASE_URL = "https://www.asetalo.fi"
 
+        private const val PROJECT_URL =
+            "https://github.com/stscoundrel/matsuri"
+
+        private const val USER_AGENT =
+            "Matsuri/1.0 (+$PROJECT_URL)"
+
         private const val NO_IMAGE_PATH =
             "/admin/img/verkkokauppa/ei_kuvaa-iso.gif"
     }
@@ -20,37 +27,44 @@ class AsetaloScraper(
 
         Playwright.create().use { playwright ->
             playwright.chromium().launch().use { browser ->
-                val page = browser.newPage()
+                val context = browser.newContext(
+                    Browser.NewContextOptions()
+                        .setUserAgent(USER_AGENT)
+                )
 
-                page.navigate(url)
+                context.use {
+                    val page = context.newPage()
 
-                page.locator("#listaus").waitFor()
+                    page.navigate(url)
 
-                val products =
-                    page.locator("#listaus .tuotelistauskortti")
+                    page.locator("#listaus").waitFor()
 
-                val productCount = products.count()
+                    val products =
+                        page.locator("#listaus .tuotelistauskortti")
 
-                println("Found $productCount products")
+                    val productCount = products.count()
 
-                return (0 until productCount).map { i ->
-                    val product = products.nth(i)
+                    println("Found $productCount products")
 
-                    val productLink =
-                        product.locator(".selaus_tuotenimi_iso a")
+                    return (0 until productCount).map { i ->
+                        val product = products.nth(i)
 
-                    val href =
-                        productLink.getAttribute("href") ?: ""
+                        val productLink =
+                            product.locator(".selaus_tuotenimi_iso a")
 
-                    Product(
-                        category = category,
-                        id = extractProductId(href),
-                        name = productLink
-                            .textContent()
-                            ?.trim()
-                            ?: "",
-                        hasImage = hasImage(product)
-                    )
+                        val href =
+                            productLink.getAttribute("href") ?: ""
+
+                        Product(
+                            category = category,
+                            id = extractProductId(href),
+                            name = productLink
+                                .textContent()
+                                ?.trim()
+                                ?: "",
+                            hasImage = hasImage(product)
+                        )
+                    }
                 }
             }
         }
