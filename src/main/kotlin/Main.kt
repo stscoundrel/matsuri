@@ -22,6 +22,12 @@ fun main() {
         ),
         AsetaloScraper(
             "/aseet/kaytetyt-aseet/pistoolit/7850/"
+        ),
+        AsetaloScraper(
+            "/aseet/kaytetyt-aseet/pienoispistoolit/7866/"
+        ),
+        AsetaloScraper(
+            "/aseet/kaytetyt-aseet/pienoiskivaarit/50/"
         )
     )
 
