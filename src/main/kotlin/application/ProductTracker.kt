@@ -5,24 +5,27 @@ import io.github.stscoundrel.matsuri.domain.ProductRepository
 import io.github.stscoundrel.matsuri.domain.ProductTrackingResult
 
 class ProductTracker(
-    private val repository: ProductRepository
+    private val repository: ProductRepository,
+    private val transactionRunner: TransactionRunner
 ) {
 
     fun run(fetcher: ProductFetcher): ProductTrackingResult {
         val products = fetcher.fetchProducts()
 
-        val newImages = products.mapNotNull { product ->
-            val previous = repository.find(
-                category = product.category,
-                id = product.id
-            )
+        val newImages = transactionRunner.transaction {
+            products.mapNotNull { product ->
+                val previous = repository.find(
+                    category = product.category,
+                    id = product.id
+                )
 
-            repository.save(product)
+                repository.save(product)
 
-            if (previous?.hasImage == false && product.hasImage) {
-                product
-            } else {
-                null
+                if (previous?.hasImage == false && product.hasImage) {
+                    product
+                } else {
+                    null
+                }
             }
         }
 

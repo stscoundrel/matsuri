@@ -3,6 +3,7 @@ package io.github.stscoundrel.matsuri
 import io.github.stscoundrel.matsuri.application.MatsuriService
 import io.github.stscoundrel.matsuri.application.ProductTracker
 import io.github.stscoundrel.matsuri.database.Database
+import io.github.stscoundrel.matsuri.database.JdbcTransactionRunner
 import io.github.stscoundrel.matsuri.database.SqliteProductRepository
 import io.github.stscoundrel.matsuri.report.ConsoleReportRenderer
 import io.github.stscoundrel.matsuri.report.ProductReportService
@@ -36,8 +37,11 @@ fun main() {
         val repository =
             SqliteProductRepository(database.connection)
 
+        val transactionRunner =
+            JdbcTransactionRunner(database.connection)
+
         val tracker =
-            ProductTracker(repository)
+            ProductTracker(repository, transactionRunner)
 
         val service =
             MatsuriService(
